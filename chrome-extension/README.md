@@ -7,14 +7,14 @@ Extensao Chrome local para encontrar arquivos `.meshy` carregados pela aba atual
 Antes de carregar a extensao, baixe os arquivos locais do decodificador:
 
 ```powershell
-cd C:\Users\Luan\Desktop\meshy
+cd C:\Users\SEU_USUARIO\Desktop\meshy
 powershell -ExecutionPolicy Bypass -File .\setup-vendor.ps1
 ```
 
 1. Abra `chrome://extensions`.
 2. Ative `Modo do desenvolvedor`.
 3. Clique em `Carregar sem compactacao`.
-4. Selecione a pasta `C:\Users\Luan\Desktop\meshy\chrome-extension`.
+4. Selecione a pasta `C:\Users\SEU_USUARIO\Desktop\meshy\chrome-extension`.
 
 ## Usar
 
