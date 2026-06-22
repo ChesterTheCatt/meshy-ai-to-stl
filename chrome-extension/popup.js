@@ -58,7 +58,7 @@ function scanPageForMeshyLinks() {
 
 async function getActiveTab() {
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-  if (!tab?.id) throw new Error("Nao foi possivel acessar a aba atual.");
+  if (!tab?.id) throw new Error("Could not access the current tab.");
   return tab;
 }
 
@@ -113,7 +113,7 @@ function convertInSandbox(buffer) {
       if (event.source !== sandboxFrame.contentWindow || event.data?.id !== id) return;
       window.removeEventListener("message", onMessage);
       if (event.data.ok) resolve(event.data.stl);
-      else reject(new Error(event.data.error || "Falha ao converter"));
+      else reject(new Error(event.data.error || "Conversion failed"));
     };
     window.addEventListener("message", onMessage);
     sandboxFrame.contentWindow.postMessage({ type: "convert", id, buffer }, "*", [buffer]);
@@ -122,20 +122,20 @@ function convertInSandbox(buffer) {
 
 async function fetchArrayBuffer(url) {
   const response = await fetch(url, { credentials: "include", redirect: "follow" });
-  if (!response.ok) throw new Error(`Download falhou: ${response.status} ${response.statusText}`);
+  if (!response.ok) throw new Error(`Download failed: ${response.status} ${response.statusText}`);
   return response.arrayBuffer();
 }
 
 async function scan() {
   try {
-    setBusy(true, "Procurando .meshy no Network da aba atual...");
+    setBusy(true, "Searching for .meshy files in the current tab network activity...");
     const links = await getLinksFromActiveTab();
     fillLinks(links);
     statusEl.textContent = links.length
-      ? `${links.length} arquivo(s) .meshy encontrado(s).`
-      : "Nenhum .meshy encontrado. Recarregue a pagina com a extensao instalada e tente de novo.";
+      ? `${links.length} .meshy file(s) found.`
+      : "No .meshy file found. Reload the page with the extension installed and try again.";
   } catch (error) {
-    statusEl.textContent = `Erro ao procurar: ${error.message}`;
+    statusEl.textContent = `Scan error: ${error.message}`;
   } finally {
     setBusy(false, statusEl.textContent);
   }
@@ -146,19 +146,19 @@ scanButton.addEventListener("click", scan);
 convertButton.addEventListener("click", async () => {
   const url = linksSelect.value;
   if (!url) {
-    statusEl.textContent = "Nenhum .meshy selecionado.";
+    statusEl.textContent = "No .meshy file selected.";
     return;
   }
 
   try {
-    setBusy(true, "Baixando .meshy...");
+    setBusy(true, "Downloading .meshy...");
     const buffer = await fetchArrayBuffer(url);
-    setBusy(true, "Decodificando e convertendo para STL...");
+    setBusy(true, "Decoding and converting to STL...");
     const stl = await convertInSandbox(buffer);
     await downloadBlob(new Blob([stl], { type: "model/stl" }), `${baseNameFromUrl(url)}.stl`);
-    statusEl.textContent = "STL gerado.";
+    statusEl.textContent = "STL generated.";
   } catch (error) {
-    statusEl.textContent = `Erro: ${error.message}`;
+    statusEl.textContent = `Error: ${error.message}`;
   } finally {
     setBusy(false, statusEl.textContent);
   }

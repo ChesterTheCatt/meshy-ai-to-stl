@@ -1,33 +1,33 @@
 # Meshy To STL
 
-Extensao Chrome local para encontrar arquivos `.meshy` carregados pela aba atual e converter em STL binario.
+Local Chrome extension that finds `.meshy` files loaded by the current tab and converts them to binary STL.
 
-## Instalar
+## Install
 
-Antes de carregar a extensao, baixe os arquivos locais do decodificador:
+Before loading the extension, download the local decoder files:
 
 ```powershell
 cd C:\Users\SEU_USUARIO\Desktop\meshy
 powershell -ExecutionPolicy Bypass -File .\setup-vendor.ps1
 ```
 
-1. Abra `chrome://extensions`.
-2. Ative `Modo do desenvolvedor`.
-3. Clique em `Carregar sem compactacao`.
-4. Selecione a pasta `C:\Users\SEU_USUARIO\Desktop\meshy\chrome-extension`.
+1. Open `chrome://extensions`.
+2. Enable `Developer mode`.
+3. Click `Load unpacked`.
+4. Select `C:\Users\SEU_USUARIO\Desktop\meshy\chrome-extension`.
 
-## Usar
+## Use
 
-1. Abra a pagina onde o modelo `.meshy` esta hospedado.
-2. Recarregue a pagina para a extensao capturar o Network.
-3. Clique no icone da extensao.
-4. Selecione o `.meshy` encontrado.
-5. Clique em `Baixar STL`.
+1. Open the page where the `.meshy` model is hosted.
+2. Reload the page so the extension can capture network activity.
+3. Click the extension icon.
+4. Select the detected `.meshy` file.
+5. Click `Download STL`.
 
-## Observacoes
+## Notes
 
-- A conversao roda localmente no navegador.
-- `vendor/mesh_loader.js` e `vendor/mesh_loader.wasm` nao sao versionados neste repo; rode `setup-vendor.ps1` para baixar suas copias locais.
-- O arquivo `.stl` baixado e binario, entao fica menor que STL ASCII.
-- A extensao tambem consulta `performance.getEntriesByType("resource")`, entao muitos arquivos que aparecem no Network ja aparecem automaticamente no popup.
-- Sites que bloqueiam download por permissao, login ou URL temporaria podem exigir que voce esteja logado na mesma sessao do Chrome.
+- Conversion runs locally in the browser.
+- `vendor/mesh_loader.js` and `vendor/mesh_loader.wasm` are not versioned in this repository; run `setup-vendor.ps1` to download your local copies.
+- The downloaded `.stl` file is binary, so it is smaller than ASCII STL.
+- The extension also checks `performance.getEntriesByType("resource")`, so many files visible in the Network panel will automatically appear in the popup.
+- Sites with login, temporary URLs, or strict download permissions may require you to be logged in with the same Chrome session.

@@ -32,7 +32,7 @@ Then load the extension in Chrome:
 2. Reload the page so the extension can capture network requests.
 3. Click the Meshy To STL extension icon.
 4. Select the detected `.meshy` file.
-5. Click `Baixar STL`.
+5. Click `Download STL`.
 
 ## Notes
 

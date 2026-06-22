@@ -33,7 +33,7 @@ async function getMeshyModule() {
       const hostname = "www.meshy.ai";
       const timestamp = Date.now();
       if (!mod.authorize(hostname, timestamp, signature(hostname, timestamp))) {
-        throw new Error("Nao foi possivel autorizar o decodificador Meshy.");
+        throw new Error("Could not authorize the Meshy decoder.");
       }
       return mod;
     });
@@ -56,7 +56,7 @@ function readGlb(buffer) {
   const bytes = new Uint8Array(buffer);
   const view = new DataView(buffer);
   if (new TextDecoder().decode(bytes.slice(0, 4)) !== "glTF" || view.getUint32(4, true) !== 2) {
-    throw new Error("O decodificador nao retornou um GLB valido.");
+    throw new Error("The decoder did not return a valid GLB.");
   }
 
   let offset = 12;
@@ -70,7 +70,7 @@ function readGlb(buffer) {
     if (type === "BIN\0") bin = chunk;
     offset += 8 + length;
   }
-  if (!json || !bin) throw new Error("GLB sem chunks JSON/BIN.");
+  if (!json || !bin) throw new Error("GLB is missing JSON/BIN chunks.");
   return { json, bin };
 }
 
@@ -87,7 +87,7 @@ function accessorReader(gltf, bin, index) {
   const bufferView = gltf.bufferViews[accessor.bufferView];
   const reader = readers[accessor.componentType];
   const itemSize = typeCounts[accessor.type];
-  if (!reader || !itemSize) throw new Error(`Accessor GLB nao suportado: ${index}`);
+  if (!reader || !itemSize) throw new Error(`Unsupported GLB accessor: ${index}`);
 
   const view = new DataView(bin.buffer, bin.byteOffset, bin.byteLength);
   const stride = bufferView.byteStride || reader.size * itemSize;
@@ -179,7 +179,7 @@ function glbToBinaryStl(buffer) {
     const mesh = json.meshes[node.mesh];
     for (const primitive of mesh.primitives || []) {
       if (primitive.mode !== undefined && primitive.mode !== 4) continue;
-      if (primitive.attributes?.POSITION === undefined) throw new Error("GLB sem POSITION.");
+      if (primitive.attributes?.POSITION === undefined) throw new Error("GLB is missing POSITION.");
       const indices = primitive.indices === undefined ? null : accessorReader(json, bin, primitive.indices);
       const positions = accessorReader(json, bin, primitive.attributes.POSITION);
       triangleCount += Math.floor((indices ? indices.count : positions.count) / 3);
@@ -230,7 +230,7 @@ function glbToBinaryStl(buffer) {
 async function convert(buffer) {
   const mod = await getMeshyModule();
   const result = mod.processMeshyFile(new Uint8Array(buffer));
-  if (!result?.success) throw new Error(result?.error || "Falha ao decodificar .meshy.");
+  if (!result?.success) throw new Error(result?.error || "Failed to decode .meshy.");
   const glb = result.data instanceof Uint8Array ? result.data.buffer.slice(result.data.byteOffset, result.data.byteOffset + result.data.byteLength) : result.data;
   return glbToBinaryStl(glb);
 }
