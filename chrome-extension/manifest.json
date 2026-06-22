@@ -1,0 +1,53 @@
+{
+  "manifest_version": 3,
+  "name": "Meshy To STL",
+  "version": "0.1.0",
+  "description": "Encontra arquivos .meshy na aba atual e converte para STL binario.",
+  "action": {
+    "default_title": "Meshy To STL",
+    "default_popup": "popup.html"
+  },
+  "permissions": [
+    "activeTab",
+    "downloads",
+    "scripting",
+    "webRequest"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  "content_scripts": [
+    {
+      "matches": [
+        "<all_urls>"
+      ],
+      "js": [
+        "content.js"
+      ],
+      "run_at": "document_idle"
+    }
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "sandbox": {
+    "pages": [
+      "sandbox.html"
+    ]
+  },
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'",
+    "sandbox": "sandbox allow-scripts allow-downloads; script-src 'self' 'unsafe-eval' 'wasm-unsafe-eval'; child-src 'self'"
+  },
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "vendor/mesh_loader.js",
+        "vendor/mesh_loader.wasm"
+      ],
+      "matches": [
+        "<all_urls>"
+      ]
+    }
+  ]
+}

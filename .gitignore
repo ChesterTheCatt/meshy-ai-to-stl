@@ -1,0 +1,6 @@
+*.stl
+*.glb
+*.meshy
+
+chrome-extension/vendor/*
+!chrome-extension/vendor/.gitkeep

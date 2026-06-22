@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Meshy To STL</title>
+    <link rel="stylesheet" href="popup.css">
+  </head>
+  <body>
+    <main>
+      <header>
+        <h1>Meshy To STL</h1>
+        <button id="scan" type="button" title="Atualizar busca na aba">Atualizar</button>
+      </header>
+
+      <select id="links" size="7" aria-label="Arquivos .meshy encontrados"></select>
+
+      <div class="row">
+        <button id="convert" type="button">Baixar STL</button>
+      </div>
+
+      <progress id="progress" hidden></progress>
+      <p id="status">Pronto.</p>
+    </main>
+
+    <iframe id="sandbox" src="sandbox.html" hidden></iframe>
+    <script src="popup.js"></script>
+  </body>
+</html>
