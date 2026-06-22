@@ -15,7 +15,7 @@ Meshy To STL is a Chrome extension that finds `.meshy` files loaded by the curre
 Before loading the extension, download the local decoder files:
 
 ```powershell
-cd C:\Users\SEU_USUARIO\Desktop\meshy
+cd C:\Users\YOUR-USER\Desktop\meshy
 powershell -ExecutionPolicy Bypass -File .\setup-vendor.ps1
 ```
 
