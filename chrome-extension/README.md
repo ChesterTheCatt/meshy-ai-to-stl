@@ -14,7 +14,7 @@ powershell -ExecutionPolicy Bypass -File .\setup-vendor.ps1
 1. Open `chrome://extensions`.
 2. Enable `Developer mode`.
 3. Click `Load unpacked`.
-4. Select `C:\Users\SEU_USUARIO\Desktop\meshy\chrome-extension`.
+4. Select `C:\Users\YOUR-USER\Desktop\meshy\chrome-extension`.
 
 ## Use
 
