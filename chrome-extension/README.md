@@ -28,6 +28,7 @@ powershell -ExecutionPolicy Bypass -File .\setup-vendor.ps1
 
 - Conversion runs locally in the browser.
 - `vendor/mesh_loader.js` and `vendor/mesh_loader.wasm` are not versioned in this repository; run `setup-vendor.ps1` to download your local copies.
+- If the extension says decoder files are missing, run `setup-vendor.ps1` and reload the extension in `chrome://extensions`.
 - The downloaded `.stl` file is binary, so it is smaller than ASCII STL.
 - The extension also checks `performance.getEntriesByType("resource")`, so many files visible in the Network panel will automatically appear in the popup.
 - Sites with login, temporary URLs, or strict download permissions may require you to be logged in with the same Chrome session.

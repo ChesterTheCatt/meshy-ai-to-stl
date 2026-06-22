@@ -39,4 +39,5 @@ Then load the extension in Chrome:
 - Conversion runs locally in your browser.
 - `chrome-extension/vendor/mesh_loader.js` and `chrome-extension/vendor/mesh_loader.wasm` are intentionally not versioned.
 - Run `setup-vendor.ps1` after cloning the repository.
+- If the extension says decoder files are missing, run `setup-vendor.ps1` and reload the extension in `chrome://extensions`.
 - Sites with login, temporary URLs, or strict download permissions may require you to be logged in with the same Chrome session.

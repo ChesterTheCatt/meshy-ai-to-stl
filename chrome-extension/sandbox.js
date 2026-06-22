@@ -1,5 +1,3 @@
-import Module from "./vendor/mesh_loader.js";
-
 let modulePromise;
 
 function signature(hostname, timestamp) {
@@ -26,9 +24,16 @@ function signature(hostname, timestamp) {
 
 async function getMeshyModule() {
   if (!modulePromise) {
-    modulePromise = Module({
+    modulePromise = import("./vendor/mesh_loader.js").catch((error) => {
+      throw new Error(`Decoder files are missing or could not be loaded. Run setup-vendor.ps1, then reload the extension. Details: ${error.message}`);
+    }).then(({ default: Module }) => Module({
       locateFile: (path) => new URL(`./vendor/${path}`, location.href).href,
       printErr: () => {},
+    })).catch((error) => {
+      if (String(error.message || error).includes("mesh_loader.wasm")) {
+        throw new Error(`Decoder files are missing or could not be loaded. Run setup-vendor.ps1, then reload the extension. Details: ${error.message}`);
+      }
+      throw error;
     }).then((mod) => {
       const hostname = "www.meshy.ai";
       const timestamp = Date.now();
