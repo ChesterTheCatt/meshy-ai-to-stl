@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "Meshy To STL",
-  "version": "0.1.0",
-  "description": "Finds .meshy files in the current tab and converts them to binary STL.",
+  "version": "0.2.0",
+  "description": "Finds .meshy files in the current tab and converts them to STL, OBJ, or GLB.",
   "action": {
     "default_title": "Meshy To STL",
     "default_popup": "popup.html"

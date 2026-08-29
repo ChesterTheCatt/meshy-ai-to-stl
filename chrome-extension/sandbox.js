@@ -212,7 +212,7 @@ function glbToBinaryStl(buffer) {
       const indices = primitive.indices === undefined ? null : accessorReader(json, bin, primitive.indices);
       const count = indices ? indices.count : positions.count;
 
-      for (let i = 0; i < count; i += 3) {
+      for (let i = 0; i + 2 < count; i += 3) {
         const ia = indices ? indices.get(i)[0] : i;
         const ib = indices ? indices.get(i + 1)[0] : i + 1;
         const ic = indices ? indices.get(i + 2)[0] : i + 2;
@@ -232,19 +232,64 @@ function glbToBinaryStl(buffer) {
   return out;
 }
 
-async function convert(buffer) {
+function glbToObj(buffer) {
+  const { json, bin } = readGlb(buffer);
+  const meshNodes = collectMeshNodes(json);
+  const lines = ["# Converted from Meshy GLB"];
+  let vertexOffset = 0;
+  let objectIndex = 0;
+
+  for (const { node, world } of meshNodes) {
+    const mesh = json.meshes[node.mesh];
+    for (let primitiveIndex = 0; primitiveIndex < (mesh.primitives || []).length; primitiveIndex++) {
+      const primitive = mesh.primitives[primitiveIndex];
+      if (primitive.mode !== undefined && primitive.mode !== 4) continue;
+      if (primitive.attributes?.POSITION === undefined) throw new Error("GLB is missing POSITION.");
+
+      const positions = accessorReader(json, bin, primitive.attributes.POSITION);
+      const indices = primitive.indices === undefined ? null : accessorReader(json, bin, primitive.indices);
+      const objectName = String(mesh.name || node.name || `mesh_${objectIndex + 1}`)
+        .replace(/[^a-z0-9_.-]+/gi, "_");
+      lines.push(`o ${objectName}_${primitiveIndex + 1}`);
+
+      for (let i = 0; i < positions.count; i++) {
+        const point = transform(world, positions.get(i));
+        lines.push(`v ${point[0]} ${point[1]} ${point[2]}`);
+      }
+
+      const count = indices ? indices.count : positions.count;
+      for (let i = 0; i + 2 < count; i += 3) {
+        const a = (indices ? indices.get(i)[0] : i) + vertexOffset + 1;
+        const b = (indices ? indices.get(i + 1)[0] : i + 1) + vertexOffset + 1;
+        const c = (indices ? indices.get(i + 2)[0] : i + 2) + vertexOffset + 1;
+        lines.push(`f ${a} ${b} ${c}`);
+      }
+
+      vertexOffset += positions.count;
+      objectIndex++;
+    }
+  }
+
+  if (!objectIndex) throw new Error("GLB does not contain triangle meshes.");
+  return new TextEncoder().encode(`${lines.join("\n")}\n`).buffer;
+}
+
+async function convert(buffer, format) {
   const mod = await getMeshyModule();
   const result = mod.processMeshyFile(new Uint8Array(buffer));
   if (!result?.success) throw new Error(result?.error || "Failed to decode .meshy.");
   const glb = result.data instanceof Uint8Array ? result.data.buffer.slice(result.data.byteOffset, result.data.byteOffset + result.data.byteLength) : result.data;
-  return glbToBinaryStl(glb);
+  if (format === "glb") return glb;
+  if (format === "obj") return glbToObj(glb);
+  if (format === "stl") return glbToBinaryStl(glb);
+  throw new Error(`Unsupported output format: ${format}`);
 }
 
 window.addEventListener("message", async (event) => {
   if (event.data?.type !== "convert") return;
   try {
-    const stl = await convert(event.data.buffer);
-    event.source.postMessage({ id: event.data.id, ok: true, stl }, event.origin, [stl]);
+    const output = await convert(event.data.buffer, event.data.format);
+    event.source.postMessage({ id: event.data.id, ok: true, output }, event.origin, [output]);
   } catch (error) {
     event.source.postMessage({ id: event.data.id, ok: false, error: error.message }, event.origin);
   }

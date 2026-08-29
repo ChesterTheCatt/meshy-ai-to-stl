@@ -48,8 +48,14 @@ select {
   background: white;
 }
 
-select {
+#links {
   min-height: 156px;
+}
+
+label {
+  margin-bottom: -8px;
+  color: #40505c;
+  font-weight: 700;
 }
 
 button {

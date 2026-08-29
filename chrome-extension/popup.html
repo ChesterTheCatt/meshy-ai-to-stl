@@ -15,6 +15,13 @@
 
       <select id="links" size="7" aria-label="Arquivos .meshy encontrados"></select>
 
+      <label for="format">Output format</label>
+      <select id="format">
+        <option value="stl">STL (3D printing)</option>
+        <option value="obj">OBJ (3D editors)</option>
+        <option value="glb">GLB (original decoded model)</option>
+      </select>
+
       <div class="row">
         <button id="convert" type="button">Download STL</button>
       </div>

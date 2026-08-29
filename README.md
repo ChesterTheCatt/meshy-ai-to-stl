@@ -1,13 +1,13 @@
 # Meshy To STL
 
-Meshy To STL is a Chrome extension that finds `.meshy` files loaded by the current browser tab and converts them to binary STL files.
+Meshy To STL is a Chrome extension that finds `.meshy` files loaded by the current browser tab and converts them to STL, OBJ, or GLB files.
 
 ## Features
 
 - Detects `.meshy` files from the current page network activity.
 - Also checks browser resource entries from `performance.getEntriesByType("resource")`.
 - Converts Meshy encrypted model files locally in the browser.
-- Downloads a binary `.stl` file.
+- Exports binary STL for 3D printing, OBJ for 3D editors, or the decoded GLB model.
 - Does not commit Meshy's loader files to this repository.
 
 ## Installation
@@ -32,7 +32,8 @@ Then load the extension in Chrome:
 2. Reload the page so the extension can capture network requests.
 3. Click the Meshy To STL extension icon.
 4. Select the detected `.meshy` file.
-5. Click `Download STL`.
+5. Choose STL, OBJ, or GLB.
+6. Click the download button.
 
 ## Notes
 

@@ -1,4 +1,5 @@
 const linksSelect = document.getElementById("links");
+const formatSelect = document.getElementById("format");
 const scanButton = document.getElementById("scan");
 const convertButton = document.getElementById("convert");
 const statusEl = document.getElementById("status");
@@ -23,7 +24,8 @@ function isMeshyUrl(value) {
 function baseNameFromUrl(value) {
   try {
     const path = new URL(value).pathname.split("/").pop() || "model.meshy";
-    return decodeURIComponent(path).replace(/\.meshy$/i, "") || "model";
+    const decoded = decodeURIComponent(path).replace(/\.meshy$/i, "");
+    return decoded.replace(/[<>:"/\\|?*\u0000-\u001f]/g, "_").replace(/[. ]+$/g, "") || "model";
   } catch {
     return "model";
   }
@@ -35,7 +37,8 @@ function scanPageForMeshyLinks() {
     if (!value || typeof value !== "string") return;
     try {
       const url = new URL(value, location.href);
-      if (isMeshyUrl(url.href)) urls.add(url.href);
+      const clean = url.href.split("#")[0];
+      if (/\.meshy(?:$|[?&])/i.test(clean) || clean.includes("misc/cdn-models")) urls.add(url.href);
     } catch {
       // Ignore invalid URLs.
     }
@@ -97,26 +100,26 @@ function fillLinks(links) {
 function downloadBlob(blob, filename) {
   return new Promise((resolve, reject) => {
     const objectUrl = URL.createObjectURL(blob);
-    chrome.downloads.download({ url: objectUrl, filename, saveAs: true }, (downloadId) => {
+    chrome.downloads.download({ url: objectUrl, filename, conflictAction: "uniquify", saveAs: false }, (downloadId) => {
       const error = chrome.runtime.lastError;
-      setTimeout(() => URL.revokeObjectURL(objectUrl), 5000);
+      setTimeout(() => URL.revokeObjectURL(objectUrl), 60000);
       if (error) reject(new Error(error.message));
       else resolve(downloadId);
     });
   });
 }
 
-function convertInSandbox(buffer) {
+function convertInSandbox(buffer, format) {
   return new Promise((resolve, reject) => {
     const id = ++jobId;
     const onMessage = (event) => {
       if (event.source !== sandboxFrame.contentWindow || event.data?.id !== id) return;
       window.removeEventListener("message", onMessage);
-      if (event.data.ok) resolve(event.data.stl);
+      if (event.data.ok) resolve(event.data.output);
       else reject(new Error(event.data.error || "Conversion failed"));
     };
     window.addEventListener("message", onMessage);
-    sandboxFrame.contentWindow.postMessage({ type: "convert", id, buffer }, "*", [buffer]);
+    sandboxFrame.contentWindow.postMessage({ type: "convert", id, format, buffer }, "*", [buffer]);
   });
 }
 
@@ -143,6 +146,10 @@ async function scan() {
 
 scanButton.addEventListener("click", scan);
 
+formatSelect.addEventListener("change", () => {
+  convertButton.textContent = `Download ${formatSelect.value.toUpperCase()}`;
+});
+
 convertButton.addEventListener("click", async () => {
   const url = linksSelect.value;
   if (!url) {
@@ -151,12 +158,14 @@ convertButton.addEventListener("click", async () => {
   }
 
   try {
+    const format = formatSelect.value;
     setBusy(true, "Downloading .meshy...");
     const buffer = await fetchArrayBuffer(url);
-    setBusy(true, "Decoding and converting to STL...");
-    const stl = await convertInSandbox(buffer);
-    await downloadBlob(new Blob([stl], { type: "model/stl" }), `${baseNameFromUrl(url)}.stl`);
-    statusEl.textContent = "STL generated.";
+    setBusy(true, format === "glb" ? "Decoding GLB..." : `Decoding and converting to ${format.toUpperCase()}...`);
+    const output = await convertInSandbox(buffer, format);
+    const mimeTypes = { stl: "model/stl", obj: "model/obj", glb: "model/gltf-binary" };
+    await downloadBlob(new Blob([output], { type: mimeTypes[format] }), `${baseNameFromUrl(url)}.${format}`);
+    statusEl.textContent = `${format.toUpperCase()} generated.`;
   } catch (error) {
     statusEl.textContent = `Error: ${error.message}`;
   } finally {
