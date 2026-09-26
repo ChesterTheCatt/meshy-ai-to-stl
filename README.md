@@ -14,9 +14,19 @@ Meshy To STL is a Chrome extension that finds `.meshy` files loaded by the curre
 
 Before loading the extension, download the local decoder files:
 
+### Windows
+
 ```powershell
-cd C:\Users\YOUR-USER\Desktop\meshy
+cd C:\path\to\meshy-to-stl
 powershell -ExecutionPolicy Bypass -File .\setup-vendor.ps1
+```
+
+### macOS or Linux
+
+Open Terminal in the extracted project folder and run:
+
+```bash
+sh ./setup-vendor.sh
 ```
 
 Then load the extension in Chrome:
@@ -24,7 +34,7 @@ Then load the extension in Chrome:
 1. Open `chrome://extensions`.
 2. Enable `Developer mode`.
 3. Click `Load unpacked`.
-4. Select `C:\Users\SEU_USUARIO\Desktop\meshy\chrome-extension`.
+4. Select the project's `chrome-extension` folder.
 
 ## Usage
 
@@ -39,6 +49,8 @@ Then load the extension in Chrome:
 
 - Conversion runs locally in your browser.
 - `chrome-extension/vendor/mesh_loader.js` and `chrome-extension/vendor/mesh_loader.wasm` are intentionally not versioned.
-- Run `setup-vendor.ps1` after cloning the repository.
-- If the extension says decoder files are missing, run `setup-vendor.ps1` and reload the extension in `chrome://extensions`.
+- On Windows, run `setup-vendor.ps1` after cloning or extracting the project.
+- On macOS or Linux, run `sh ./setup-vendor.sh` after cloning or extracting the project.
+- If the extension says decoder files are missing, run the setup script for your operating system and reload the extension in `chrome://extensions`.
+- The extension requires Google Chrome or a compatible Chromium browser; Safari is not supported.
 - Sites with login, temporary URLs, or strict download permissions may require you to be logged in with the same Chrome session.
