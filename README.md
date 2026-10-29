@@ -1,5 +1,5 @@
 [![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/Z6Z329PHJO)
-
+Support me if you want and I saved you some money :D
 # Meshy To STL
 
 Meshy To STL is a Chrome extension that finds `.meshy` files loaded by the current browser tab and converts them to STL, OBJ, or GLB files.
