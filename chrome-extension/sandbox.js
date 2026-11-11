@@ -79,6 +79,72 @@ function readGlb(buffer) {
   return { json, bin };
 }
 
+function decodeDataUri(uri) {
+  const match = /^data:([^;,]+)?(?:;[^,]*)?,(.*)$/i.exec(uri || "");
+  if (!match) return null;
+  const mimeType = match[1] || "application/octet-stream";
+  const payload = match[2] || "";
+  if (/;base64/i.test(uri.slice(0, uri.indexOf(",")))) {
+    const binary = atob(payload);
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+    return { mimeType, data: bytes.buffer };
+  }
+  return { mimeType, data: new TextEncoder().encode(decodeURIComponent(payload)).buffer };
+}
+
+function textureExtension(mimeType, uri) {
+  const extensions = {
+    "image/png": "png",
+    "image/jpeg": "jpg",
+    "image/jpg": "jpg",
+    "image/webp": "webp",
+    "image/avif": "avif",
+    "image/gif": "gif",
+    "image/bmp": "bmp",
+    "image/ktx2": "ktx2",
+  };
+  if (extensions[mimeType]) return extensions[mimeType];
+  const match = String(uri || "").match(/\.([a-z0-9]+)(?:[?#]|$)/i);
+  return match ? match[1].toLowerCase() : "bin";
+}
+
+function safeTextureName(value, index, mimeType, uri) {
+  const source = String(value || "").split(/[\\/]/).pop().replace(/[?#].*$/, "");
+  const withoutExtension = source.replace(/\.[a-z0-9]+$/i, "");
+  const base = withoutExtension.replace(/[^a-z0-9_.-]+/gi, "_").replace(/^\.+|\.+$/g, "") || `texture_${index + 1}`;
+  return `${base}.${textureExtension(mimeType, uri)}`;
+}
+
+function extractTextures(glbBuffer) {
+  const { json, bin } = readGlb(glbBuffer);
+  const textures = [];
+  for (const [index, image] of (json.images || []).entries()) {
+    let data;
+    let mimeType = image.mimeType || "application/octet-stream";
+    if (image.bufferView !== undefined) {
+      const view = json.bufferViews?.[image.bufferView];
+      if (!view) continue;
+      const start = view.byteOffset || 0;
+      const end = start + view.byteLength;
+      data = bin.slice(start, end).buffer;
+    } else if (image.uri?.startsWith("data:")) {
+      const decoded = decodeDataUri(image.uri);
+      if (!decoded) continue;
+      mimeType = image.mimeType || decoded.mimeType;
+      data = decoded.data;
+    } else {
+      continue;
+    }
+    textures.push({
+      name: safeTextureName(image.name || image.uri, index, mimeType, image.uri),
+      mimeType,
+      data,
+    });
+  }
+  return textures;
+}
+
 function normalized(value, componentType) {
   if (componentType === 5120) return Math.max(value / 127, -1);
   if (componentType === 5121) return value / 255;
@@ -285,9 +351,22 @@ async function convert(buffer, format) {
   throw new Error(`Unsupported output format: ${format}`);
 }
 
+async function getTextures(buffer) {
+  const mod = await getMeshyModule();
+  const result = mod.processMeshyFile(new Uint8Array(buffer));
+  if (!result?.success) throw new Error(result?.error || "Failed to decode .meshy.");
+  const glb = result.data instanceof Uint8Array ? result.data.buffer.slice(result.data.byteOffset, result.data.byteOffset + result.data.byteLength) : result.data;
+  return extractTextures(glb);
+}
+
 window.addEventListener("message", async (event) => {
-  if (event.data?.type !== "convert") return;
+  if (!["convert", "textures"].includes(event.data?.type)) return;
   try {
+    if (event.data.type === "textures") {
+      const textures = await getTextures(event.data.buffer);
+      event.source.postMessage({ id: event.data.id, ok: true, textures }, event.origin, textures.map((texture) => texture.data));
+      return;
+    }
     const output = await convert(event.data.buffer, event.data.format);
     event.source.postMessage({ id: event.data.id, ok: true, output }, event.origin, [output]);
   } catch (error) {

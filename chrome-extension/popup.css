@@ -58,6 +58,19 @@ label {
   font-weight: 700;
 }
 
+label.checkbox {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-bottom: 0;
+  font-weight: 400;
+}
+
+label.checkbox input {
+  width: auto;
+  padding: 0;
+}
+
 button {
   padding: 8px 10px;
   color: white;
