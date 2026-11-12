@@ -1,5 +1,6 @@
 const linksSelect = document.getElementById("links");
 const formatSelect = document.getElementById("format");
+const texturesCheckbox = document.getElementById("textures");
 const scanButton = document.getElementById("scan");
 const convertButton = document.getElementById("convert");
 const statusEl = document.getElementById("status");
@@ -123,6 +124,20 @@ function convertInSandbox(buffer, format) {
   });
 }
 
+function extractTexturesInSandbox(buffer) {
+  return new Promise((resolve, reject) => {
+    const id = ++jobId;
+    const onMessage = (event) => {
+      if (event.source !== sandboxFrame.contentWindow || event.data?.id !== id) return;
+      window.removeEventListener("message", onMessage);
+      if (event.data.ok) resolve(event.data.textures || []);
+      else reject(new Error(event.data.error || "Texture extraction failed"));
+    };
+    window.addEventListener("message", onMessage);
+    sandboxFrame.contentWindow.postMessage({ type: "textures", id, buffer }, "*", [buffer]);
+  });
+}
+
 async function fetchArrayBuffer(url) {
   const response = await fetch(url, { credentials: "include", redirect: "follow" });
   if (!response.ok) throw new Error(`Download failed: ${response.status} ${response.statusText}`);
@@ -162,10 +177,25 @@ convertButton.addEventListener("click", async () => {
     setBusy(true, "Downloading .meshy...");
     const buffer = await fetchArrayBuffer(url);
     setBusy(true, format === "glb" ? "Decoding GLB..." : `Decoding and converting to ${format.toUpperCase()}...`);
-    const output = await convertInSandbox(buffer, format);
+    const output = await convertInSandbox(buffer.slice(0), format);
     const mimeTypes = { stl: "model/stl", obj: "model/obj", glb: "model/gltf-binary" };
     await downloadBlob(new Blob([output], { type: mimeTypes[format] }), `${baseNameFromUrl(url)}.${format}`);
-    statusEl.textContent = `${format.toUpperCase()} generated.`;
+    let textureMessage = "";
+    if (texturesCheckbox.checked) {
+      setBusy(true, "Extracting textures...");
+      const textures = await extractTexturesInSandbox(buffer);
+      const usedNames = new Set();
+      for (const texture of textures) {
+        let filename = texture.name || "texture.bin";
+        const original = filename;
+        let suffix = 2;
+        while (usedNames.has(filename)) filename = original.replace(/(\.[^.]+)?$/, `_${suffix++}$1`);
+        usedNames.add(filename);
+        await downloadBlob(new Blob([texture.data], { type: texture.mimeType || "application/octet-stream" }), `${baseNameFromUrl(url)}_textures/${filename}`);
+      }
+      textureMessage = textures.length ? ` ${textures.length} texture(s) downloaded.` : " No embedded textures found.";
+    }
+    statusEl.textContent = `${format.toUpperCase()} generated.${textureMessage}`;
   } catch (error) {
     statusEl.textContent = `Error: ${error.message}`;
   } finally {
