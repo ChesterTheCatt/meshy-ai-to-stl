@@ -49,7 +49,7 @@ select {
 }
 
 #links {
-  min-height: 156px;
+  min-height: 120px;
 }
 
 label {
@@ -58,12 +58,34 @@ label {
   font-weight: 700;
 }
 
+label.checkbox {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-bottom: 0;
+  font-weight: 400;
+}
+
+label.checkbox input {
+  width: auto;
+  padding: 0;
+}
+
+label.checkbox.disabled {
+  opacity: .5;
+}
+
 button {
   padding: 8px 10px;
   color: white;
   background: #176b87;
   border-color: #176b87;
   cursor: pointer;
+}
+
+button.secondary {
+  color: #176b87;
+  background: white;
 }
 
 button:disabled {
@@ -75,6 +97,11 @@ button:disabled {
   width: auto;
 }
 
+.row button {
+  flex: 1;
+  white-space: nowrap;
+}
+
 progress {
   width: 100%;
 }
@@ -84,4 +111,66 @@ progress {
   margin: 0;
   color: #40505c;
   word-break: break-word;
+}
+
+#texture-box {
+  border: 1px solid #d4dade;
+  border-radius: 6px;
+  padding: 8px;
+  background: white;
+}
+
+#texture-box summary {
+  cursor: pointer;
+  color: #40505c;
+  font-weight: 700;
+}
+
+#texture-list {
+  display: grid;
+  gap: 8px;
+  margin: 10px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+#texture-list li {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+#texture-list img,
+.thumb-empty {
+  width: 44px;
+  height: 44px;
+  flex: 0 0 44px;
+  border: 1px solid #d4dade;
+  border-radius: 4px;
+  object-fit: cover;
+  background: #eef1f3;
+}
+
+.thumb-empty {
+  display: grid;
+  place-items: center;
+  color: #7c8b96;
+  font-weight: 700;
+}
+
+#texture-list div {
+  display: grid;
+  min-width: 0;
+}
+
+#texture-list strong {
+  font-size: 12px;
+}
+
+#texture-list span {
+  color: #5c6b76;
+  font-size: 11px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
