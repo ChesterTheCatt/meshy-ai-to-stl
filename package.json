@@ -1,0 +1,9 @@
+{
+  "name": "meshy-to-stl",
+  "version": "0.3.0",
+  "private": true,
+  "description": "Chrome extension that finds .meshy files in the current tab and converts them to STL, OBJ, GLTF, or GLB.",
+  "scripts": {
+    "test": "node --test"
+  }
+}
