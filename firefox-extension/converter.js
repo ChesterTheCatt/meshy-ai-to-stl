@@ -25,13 +25,13 @@ function signature(hostname, timestamp) {
 async function getMeshyModule() {
   if (!modulePromise) {
     modulePromise = import("./vendor/mesh_loader.js").catch((error) => {
-      throw new Error(`Decoder files are missing or could not be loaded. Run setup-vendor.ps1, then reload the extension. Details: ${error.message}`);
+      throw new Error(`Decoder files are missing or could not be loaded. Run setup-vendor.ps1 (Windows) or setup-vendor.sh (macOS/Linux), then reload the add-on in about:debugging. Details: ${error.message}`);
     }).then(({ default: Module }) => Module({
       locateFile: (path) => new URL(`./vendor/${path}`, location.href).href,
       printErr: () => {},
     })).catch((error) => {
       if (String(error.message || error).includes("mesh_loader.wasm")) {
-        throw new Error(`Decoder files are missing or could not be loaded. Run setup-vendor.ps1, then reload the extension. Details: ${error.message}`);
+        throw new Error(`Decoder files are missing or could not be loaded. Run setup-vendor.ps1 (Windows) or setup-vendor.sh (macOS/Linux), then reload the add-on in about:debugging. Details: ${error.message}`);
       }
       throw error;
     }).then((mod) => {
@@ -274,7 +274,7 @@ function glbToObj(buffer) {
   return new TextEncoder().encode(`${lines.join("\n")}\n`).buffer;
 }
 
-async function convert(buffer, format) {
+export async function convert(buffer, format) {
   const mod = await getMeshyModule();
   const result = mod.processMeshyFile(new Uint8Array(buffer));
   if (!result?.success) throw new Error(result?.error || "Failed to decode .meshy.");
@@ -284,13 +284,3 @@ async function convert(buffer, format) {
   if (format === "stl") return glbToBinaryStl(glb);
   throw new Error(`Unsupported output format: ${format}`);
 }
-
-window.addEventListener("message", async (event) => {
-  if (event.data?.type !== "convert") return;
-  try {
-    const output = await convert(event.data.buffer, event.data.format);
-    event.source.postMessage({ id: event.data.id, ok: true, output }, event.origin, [output]);
-  } catch (error) {
-    event.source.postMessage({ id: event.data.id, ok: false, error: error.message }, event.origin);
-  }
-});

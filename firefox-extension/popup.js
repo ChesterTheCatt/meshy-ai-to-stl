@@ -1,12 +1,11 @@
+import { convert } from "./converter.js";
+
 const linksSelect = document.getElementById("links");
 const formatSelect = document.getElementById("format");
 const scanButton = document.getElementById("scan");
 const convertButton = document.getElementById("convert");
 const statusEl = document.getElementById("status");
 const progress = document.getElementById("progress");
-const sandboxFrame = document.getElementById("sandbox");
-
-let jobId = 0;
 
 function setBusy(isBusy, text) {
   scanButton.disabled = isBusy;
@@ -105,20 +104,6 @@ async function downloadBlob(blob, filename) {
   }
 }
 
-function convertInSandbox(buffer, format) {
-  return new Promise((resolve, reject) => {
-    const id = ++jobId;
-    const onMessage = (event) => {
-      if (event.source !== sandboxFrame.contentWindow || event.data?.id !== id) return;
-      window.removeEventListener("message", onMessage);
-      if (event.data.ok) resolve(event.data.output);
-      else reject(new Error(event.data.error || "Conversion failed"));
-    };
-    window.addEventListener("message", onMessage);
-    sandboxFrame.contentWindow.postMessage({ type: "convert", id, format, buffer }, "*", [buffer]);
-  });
-}
-
 async function fetchArrayBuffer(url) {
   const response = await fetch(url, { credentials: "include", redirect: "follow" });
   if (!response.ok) throw new Error(`Download failed: ${response.status} ${response.statusText}`);
@@ -158,7 +143,7 @@ convertButton.addEventListener("click", async () => {
     setBusy(true, "Downloading .meshy...");
     const buffer = await fetchArrayBuffer(url);
     setBusy(true, format === "glb" ? "Decoding GLB..." : `Decoding and converting to ${format.toUpperCase()}...`);
-    const output = await convertInSandbox(buffer, format);
+    const output = await convert(buffer, format);
     const mimeTypes = { stl: "model/stl", obj: "model/obj", glb: "model/gltf-binary" };
     await downloadBlob(new Blob([output], { type: mimeTypes[format] }), `${baseNameFromUrl(url)}.${format}`);
     statusEl.textContent = `${format.toUpperCase()} generated.`;
@@ -169,4 +154,4 @@ convertButton.addEventListener("click", async () => {
   }
 });
 
-document.addEventListener("DOMContentLoaded", scan);
+scan();

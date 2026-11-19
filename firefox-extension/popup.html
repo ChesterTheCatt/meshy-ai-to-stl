@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="pt-BR">
+<html lang="en">
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -13,7 +13,7 @@
         <button id="scan" type="button" title="Refresh current tab scan">Refresh</button>
       </header>
 
-      <select id="links" size="7" aria-label="Arquivos .meshy encontrados"></select>
+      <select id="links" size="7" aria-label="Detected .meshy files"></select>
 
       <label for="format">Output format</label>
       <select id="format">
@@ -30,7 +30,6 @@
       <p id="status">Ready.</p>
     </main>
 
-    <iframe id="sandbox" src="sandbox.html" hidden></iframe>
-    <script src="popup.js"></script>
+    <script type="module" src="popup.js"></script>
   </body>
 </html>
