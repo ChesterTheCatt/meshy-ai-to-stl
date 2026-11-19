@@ -4,3 +4,6 @@
 
 chrome-extension/vendor/*
 !chrome-extension/vendor/.gitkeep
+
+firefox-extension/vendor/*
+!firefox-extension/vendor/.gitkeep

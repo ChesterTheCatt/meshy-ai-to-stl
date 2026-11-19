@@ -2,7 +2,7 @@
 Support me if you want and I saved you some money :D
 # Meshy To STL
 
-Meshy To STL is a Chrome extension that finds `.meshy` files loaded by the current browser tab and converts them to STL, OBJ, or GLB files.
+Meshy To STL is a Chrome extension and Firefox add-on that finds `.meshy` files loaded by the current browser tab and converts them to STL, OBJ, or GLB files.
 
 ## Features
 
@@ -38,6 +38,14 @@ Then load the extension in Chrome:
 3. Click `Load unpacked`.
 4. Select the project's `chrome-extension` folder.
 
+Or load it in Firefox:
+
+1. Open `about:debugging#/runtime/this-firefox`.
+2. Click `Load Temporary Add-on...`.
+3. Select `firefox-extension/manifest.json`.
+
+See [firefox-extension/README.md](firefox-extension/README.md) for Firefox details, including how to keep it installed after a restart.
+
 ## Usage
 
 1. Open the page where the Meshy model is hosted.
@@ -54,5 +62,5 @@ Then load the extension in Chrome:
 - On Windows, run `setup-vendor.ps1` after cloning or extracting the project.
 - On macOS or Linux, run `sh ./setup-vendor.sh` after cloning or extracting the project.
 - If the extension says decoder files are missing, run the setup script for your operating system and reload the extension in `chrome://extensions`.
-- The extension requires Google Chrome or a compatible Chromium browser; Safari is not supported.
+- Works in Google Chrome, Chromium-based browsers and Firefox (109 or newer); Safari is not supported.
 - Sites with login, temporary URLs, or strict download permissions may require you to be logged in with the same Chrome session.

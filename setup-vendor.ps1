@@ -2,8 +2,10 @@ $ErrorActionPreference = "Stop"
 
 $root = Split-Path -Parent $MyInvocation.MyCommand.Path
 $vendor = Join-Path $root "chrome-extension\vendor"
+$firefoxVendor = Join-Path $root "firefox-extension\vendor"
 
 New-Item -ItemType Directory -Force -Path $vendor | Out-Null
+New-Item -ItemType Directory -Force -Path $firefoxVendor | Out-Null
 
 $files = @(
   @{
@@ -25,6 +27,9 @@ foreach ($file in $files) {
     throw "Downloaded file is empty: $out"
   }
   Write-Host "Saved $out ($($item.Length) bytes)"
+  Copy-Item -LiteralPath $out -Destination (Join-Path $firefoxVendor $file.Output) -Force
 }
+
+Write-Host "Copied decoder files to $firefoxVendor"
 
 Write-Host "Vendor files are ready."

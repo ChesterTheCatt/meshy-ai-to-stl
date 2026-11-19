@@ -4,8 +4,9 @@ set -eu
 
 ROOT=$(CDPATH= cd "$(dirname "$0")" && pwd)
 VENDOR="$ROOT/chrome-extension/vendor"
+FIREFOX_VENDOR="$ROOT/firefox-extension/vendor"
 
-mkdir -p "$VENDOR"
+mkdir -p "$VENDOR" "$FIREFOX_VENDOR"
 
 download() {
   url=$1
@@ -30,5 +31,8 @@ download \
 download \
   "https://www.meshy.ai/pt-BR/resource/decrypt/mesh_loader.wasm" \
   "$VENDOR/mesh_loader.wasm"
+
+cp "$VENDOR/mesh_loader.js" "$VENDOR/mesh_loader.wasm" "$FIREFOX_VENDOR/"
+printf 'Copied decoder files to %s\n' "$FIREFOX_VENDOR"
 
 printf 'Vendor files are ready.\n'
