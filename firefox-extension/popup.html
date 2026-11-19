@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Meshy To STL</title>
+    <link rel="stylesheet" href="popup.css">
+  </head>
+  <body>
+    <main>
+      <header>
+        <h1>Meshy To STL</h1>
+        <button id="scan" type="button" title="Refresh current tab scan">Refresh</button>
+      </header>
+
+      <select id="links" size="7" aria-label="Arquivos .meshy encontrados"></select>
+
+      <label for="format">Output format</label>
+      <select id="format">
+        <option value="stl">STL (3D printing)</option>
+        <option value="obj">OBJ (3D editors)</option>
+        <option value="glb">GLB (original decoded model)</option>
+      </select>
+
+      <div class="row">
+        <button id="convert" type="button">Download STL</button>
+      </div>
+
+      <progress id="progress" hidden></progress>
+      <p id="status">Ready.</p>
+    </main>
+
+    <iframe id="sandbox" src="sandbox.html" hidden></iframe>
+    <script src="popup.js"></script>
+  </body>
+</html>

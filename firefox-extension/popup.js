@@ -1,0 +1,172 @@
+const linksSelect = document.getElementById("links");
+const formatSelect = document.getElementById("format");
+const scanButton = document.getElementById("scan");
+const convertButton = document.getElementById("convert");
+const statusEl = document.getElementById("status");
+const progress = document.getElementById("progress");
+const sandboxFrame = document.getElementById("sandbox");
+
+let jobId = 0;
+
+function setBusy(isBusy, text) {
+  scanButton.disabled = isBusy;
+  convertButton.disabled = isBusy;
+  progress.hidden = !isBusy;
+  statusEl.textContent = text;
+}
+
+function isMeshyUrl(value) {
+  if (!value || typeof value !== "string") return false;
+  const clean = value.split("#")[0];
+  return /\.meshy(?:$|[?&])/i.test(clean) || clean.includes("misc/cdn-models");
+}
+
+function baseNameFromUrl(value) {
+  try {
+    const path = new URL(value).pathname.split("/").pop() || "model.meshy";
+    const decoded = decodeURIComponent(path).replace(/\.meshy$/i, "");
+    return decoded.replace(/[<>:"/\\|?*\u0000-\u001f]/g, "_").replace(/[. ]+$/g, "") || "model";
+  } catch {
+    return "model";
+  }
+}
+
+function scanPageForMeshyLinks() {
+  const urls = new Set();
+  const add = (value) => {
+    if (!value || typeof value !== "string") return;
+    try {
+      const url = new URL(value, location.href);
+      const clean = url.href.split("#")[0];
+      if (/\.meshy(?:$|[?&])/i.test(clean) || clean.includes("misc/cdn-models")) urls.add(url.href);
+    } catch {
+      // Ignore invalid URLs.
+    }
+  };
+
+  performance.getEntriesByType("resource").forEach((entry) => add(entry.name));
+  document.querySelectorAll("a[href]").forEach((el) => add(el.getAttribute("href")));
+  document.querySelectorAll("[src]").forEach((el) => add(el.getAttribute("src")));
+  document.querySelectorAll("[data-src],[data-url],[data-model-url]").forEach((el) => {
+    add(el.getAttribute("data-src"));
+    add(el.getAttribute("data-url"));
+    add(el.getAttribute("data-model-url"));
+  });
+  for (const match of document.documentElement.innerHTML.matchAll(/https?:\/\/[^"'<>\\\s]+(?:\.meshy|misc\/cdn-models)[^"'<>\\\s]*/gi)) {
+    add(match[0]);
+  }
+
+  return [...urls].slice(0, 50);
+}
+
+async function getActiveTab() {
+  const [tab] = await browser.tabs.query({ active: true, currentWindow: true });
+  if (!tab?.id) throw new Error("Could not access the current tab.");
+  return tab;
+}
+
+async function getLinksFromActiveTab() {
+  const tab = await getActiveTab();
+  const all = new Set();
+
+  const remembered = await browser.runtime.sendMessage({ type: "get-meshy-requests", tabId: tab.id }).catch(() => null);
+  for (const link of remembered?.links || []) all.add(link);
+
+  try {
+    const response = await browser.tabs.sendMessage(tab.id, { type: "scan-meshy-links" });
+    for (const link of response?.links || []) all.add(link);
+  } catch {
+    const [result] = await browser.tabs.executeScript(tab.id, {
+      code: `(${scanPageForMeshyLinks.toString()})()`,
+    });
+    for (const link of result || []) all.add(link);
+  }
+
+  return [...all].filter(isMeshyUrl).slice(0, 50);
+}
+
+function fillLinks(links) {
+  linksSelect.replaceChildren();
+  for (const link of links) {
+    const option = document.createElement("option");
+    option.value = link;
+    option.textContent = link;
+    linksSelect.append(option);
+  }
+  if (linksSelect.options.length) linksSelect.selectedIndex = 0;
+}
+
+async function downloadBlob(blob, filename) {
+  const objectUrl = URL.createObjectURL(blob);
+  try {
+    return await browser.downloads.download({ url: objectUrl, filename, conflictAction: "uniquify", saveAs: false });
+  } finally {
+    setTimeout(() => URL.revokeObjectURL(objectUrl), 60000);
+  }
+}
+
+function convertInSandbox(buffer, format) {
+  return new Promise((resolve, reject) => {
+    const id = ++jobId;
+    const onMessage = (event) => {
+      if (event.source !== sandboxFrame.contentWindow || event.data?.id !== id) return;
+      window.removeEventListener("message", onMessage);
+      if (event.data.ok) resolve(event.data.output);
+      else reject(new Error(event.data.error || "Conversion failed"));
+    };
+    window.addEventListener("message", onMessage);
+    sandboxFrame.contentWindow.postMessage({ type: "convert", id, format, buffer }, "*", [buffer]);
+  });
+}
+
+async function fetchArrayBuffer(url) {
+  const response = await fetch(url, { credentials: "include", redirect: "follow" });
+  if (!response.ok) throw new Error(`Download failed: ${response.status} ${response.statusText}`);
+  return response.arrayBuffer();
+}
+
+async function scan() {
+  try {
+    setBusy(true, "Searching for .meshy files in the current tab network activity...");
+    const links = await getLinksFromActiveTab();
+    fillLinks(links);
+    statusEl.textContent = links.length
+      ? `${links.length} .meshy file(s) found.`
+      : "No .meshy file found. Reload the page with the add-on installed and try again.";
+  } catch (error) {
+    statusEl.textContent = `Scan error: ${error.message}`;
+  } finally {
+    setBusy(false, statusEl.textContent);
+  }
+}
+
+scanButton.addEventListener("click", scan);
+
+formatSelect.addEventListener("change", () => {
+  convertButton.textContent = `Download ${formatSelect.value.toUpperCase()}`;
+});
+
+convertButton.addEventListener("click", async () => {
+  const url = linksSelect.value;
+  if (!url) {
+    statusEl.textContent = "No .meshy file selected.";
+    return;
+  }
+
+  try {
+    const format = formatSelect.value;
+    setBusy(true, "Downloading .meshy...");
+    const buffer = await fetchArrayBuffer(url);
+    setBusy(true, format === "glb" ? "Decoding GLB..." : `Decoding and converting to ${format.toUpperCase()}...`);
+    const output = await convertInSandbox(buffer, format);
+    const mimeTypes = { stl: "model/stl", obj: "model/obj", glb: "model/gltf-binary" };
+    await downloadBlob(new Blob([output], { type: mimeTypes[format] }), `${baseNameFromUrl(url)}.${format}`);
+    statusEl.textContent = `${format.toUpperCase()} generated.`;
+  } catch (error) {
+    statusEl.textContent = `Error: ${error.message}`;
+  } finally {
+    setBusy(false, statusEl.textContent);
+  }
+});
+
+document.addEventListener("DOMContentLoaded", scan);

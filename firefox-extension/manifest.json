@@ -1,0 +1,38 @@
+{
+  "manifest_version": 2,
+  "name": "Meshy To STL",
+  "version": "0.2.1",
+  "description": "Finds .meshy files in the current tab and converts them to STL, OBJ, or GLB.",
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "meshy-to-stl@theworstdrug.github.io",
+      "strict_min_version": "109.0",
+      "data_collection_permissions": {
+        "required": ["none"]
+      }
+    }
+  },
+  "browser_action": {
+    "default_title": "Meshy To STL",
+    "default_popup": "popup.html"
+  },
+  "permissions": [
+    "activeTab",
+    "downloads",
+    "tabs",
+    "webRequest",
+    "<all_urls>"
+  ],
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "background": {
+    "scripts": ["background.js"],
+    "persistent": true
+  },
+  "content_security_policy": "script-src 'self' 'unsafe-eval' 'wasm-unsafe-eval'; object-src 'self'"
+}
